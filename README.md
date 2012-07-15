@@ -27,6 +27,6 @@ To provide access to a private git bitbucket repository on the import path `go.m
 
 Start gorepos on the server at `go.mycompany.com` with,
 
-	gorepos -a go.mycompany.com:80 -p pkgs
+	sudo gorepos -a go.mycompany.com:80 -p pkgs
 
 Now you can `import "go.mycompany.com/mylib"` in your program and `go get` it.
