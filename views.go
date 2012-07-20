@@ -48,7 +48,7 @@ const pkgView = `
 	</head>
 	<body>
 		<h1>{{.host}}{{.pkg.Path}}</h1>
-		<span style="font-weight: bold">VCS:</span>{{.pkg.Vcs}}git<br>
+		<span style="font-weight: bold">VCS:</span> {{.pkg.Vcs}}<br>
 		<span style="font-weight: bold">Repo-Root:</span> {{.pkg.Repo}}
 	</body>
 </html>
