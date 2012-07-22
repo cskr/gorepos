@@ -90,6 +90,7 @@ func (pl *PackageList) loadPackages() error {
 	if err != nil {
 		return err
 	}
+	defer f.Close()
 	in := bufio.NewReader(f)
 
 	pkgs := make(map[string]Package)
