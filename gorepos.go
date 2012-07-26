@@ -103,8 +103,11 @@ func (pl *PackageList) loadPackages() error {
 			return err
 		}
 
-		pkg := NewPackage(string(ln))
-		pkgs[pkg.Path] = pkg
+		line := string(ln)
+		if len(strings.TrimSpace(line)) > 0 {
+			pkg := NewPackage(line)
+			pkgs[pkg.Path] = pkg
+		}
 	}
 	pl.packages = pkgs
 

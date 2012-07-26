@@ -129,6 +129,7 @@ func generateList() (fname string, err error) {
 
 	fmt.Fprintln(f, "/lib1 git ssh://git@bitbucket.org/user1/lib1")
 	fmt.Fprintln(f, "/lib2 hg ssh://hg@bitbucket.org/user2/lib2")
+	fmt.Fprintln(f, " ")
 	fmt.Fprintln(f, "/lib3 git ssh://git@go.mydomain.com/lib3")
 	return fname, nil
 }
