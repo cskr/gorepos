@@ -75,19 +75,19 @@ func TestPkg(t *testing.T) {
 		return
 	}
 
-	body, expected := invokePkg(pl, "lib1", "git", "ssh://git@bitbucket.org/user1/lib1")
+	body, expected := invokePkg(pl, "lib1", "git", "ssh://git@bitbucket.org/user1/lib1", true)
 	if body != expected {
 		t.Errorf("Body = %s, want %s", body, expected)
 		return
 	}
 
-	body, expected = invokePkg(pl, "lib2", "hg", "ssh://hg@bitbucket.org/user2/lib2")
+	body, expected = invokePkg(pl, "lib2", "hg", "ssh://hg@bitbucket.org/user2/lib2", true)
 	if body != expected {
 		t.Errorf("Body = %s, want %s", body, expected)
 		return
 	}
 
-	body, expected = invokePkg(pl, "lib3", "git", "ssh://git@go.mydomain.com/lib3")
+	body, expected = invokePkg(pl, "lib3", "git", "ssh://git@go.mydomain.com/lib3", true)
 	if body != expected {
 		t.Errorf("Body = %s, want %s", body, expected)
 	}
@@ -113,9 +113,37 @@ func TestReload(t *testing.T) {
 	}
 
 	time.Sleep(100 * time.Millisecond)
-	body, expected := invokePkg(pl, "lib4", "git", "ssh://git@go.mydomain.com/lib4")
+	body, expected := invokePkg(pl, "lib4", "git", "ssh://git@go.mydomain.com/lib4", true)
 	if body != expected {
 		t.Errorf("Body = %s, want %s", body, expected)
+	}
+}
+
+func TestRedirect(t *testing.T) {
+	list, err := generateList()
+	if err != nil {
+		t.Errorf("Error generating package list: %s", err)
+	}
+
+	pl, err := NewPackageList(list)
+	if err != nil {
+		t.Errorf("Error reading package list: %s", err)
+		return
+	}
+
+	body, expected := invokePkg(pl, "lib1", "git", "ssh://git@bitbucket.org/user1/lib1", false)
+	if body != expected {
+		t.Errorf("Body = %s, want %s", body, expected)
+		return
+	}
+
+	w := recordPkg(pl, "lib3", "git", "ssh://git@go.mydomain.com/lib3", false)
+	if w.Code != 302 {
+		t.Errorf("Status = %d, want 302", w.Code)
+	}
+
+	if loc := w.Header()["Location"]; loc == nil || loc[0] != "http://godoc.mydomain.com/lib3" {
+		t.Errorf("Location = %v, want [\"http://godoc.mydomain.com/lib3\"]", loc)
 	}
 }
 
@@ -130,7 +158,7 @@ func generateList() (fname string, err error) {
 	fmt.Fprintln(f, "/lib1 git ssh://git@bitbucket.org/user1/lib1")
 	fmt.Fprintln(f, "/lib2 hg ssh://hg@bitbucket.org/user2/lib2")
 	fmt.Fprintln(f, " ")
-	fmt.Fprintln(f, "/lib3 git ssh://git@go.mydomain.com/lib3")
+	fmt.Fprintln(f, "/lib3 git ssh://git@go.mydomain.com/lib3 http://godoc.mydomain.com/lib3")
 	return fname, nil
 }
 
@@ -145,10 +173,8 @@ func appendList(list, line string) error {
 	return nil
 }
 
-func invokePkg(pl *PackageList, pkg, vcs, repo string) (body, expected string) {
-	r, _ := http.NewRequest("GET", "http://example.com/"+pkg, nil)
-	w := httptest.NewRecorder()
-	pl.ServeHTTP(w, r)
+func invokePkg(pl *PackageList, pkg, vcs, repo string, includeParam bool) (body, expected string) {
+	w := recordPkg(pl, pkg, vcs, repo, includeParam)
 
 	b := new(bytes.Buffer)
 	pkgTmpl.Execute(b, map[string]interface{}{
@@ -161,4 +187,17 @@ func invokePkg(pl *PackageList, pkg, vcs, repo string) (body, expected string) {
 	})
 
 	return w.Body.String(), b.String()
+}
+
+func recordPkg(pl *PackageList, pkg, vcs, repo string, includeParam bool) *httptest.ResponseRecorder {
+	url := "http://example.com/" + pkg
+	if includeParam {
+		url += "?go-get=1"
+	}
+
+	r, _ := http.NewRequest("GET", url, nil)
+	w := httptest.NewRecorder()
+	pl.ServeHTTP(w, r)
+
+	return w
 }

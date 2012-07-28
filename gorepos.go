@@ -155,10 +155,14 @@ func (pl *PackageList) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		})
 	} else {
 		if pkg, ok := pl.packages[r.URL.Path]; ok {
-			pkgTmpl.Execute(w, map[string]interface{}{
-				"host": r.Host,
-				"pkg":  pkg,
-			})
+			if r.FormValue("go-get") == "1" || pkg.Doc == "" {
+				pkgTmpl.Execute(w, map[string]interface{}{
+					"host": r.Host,
+					"pkg":  pkg,
+				})
+			} else {
+				http.Redirect(w, r, pkg.Doc, http.StatusFound)
+			}
 		} else {
 			http.NotFound(w, r)
 		}
@@ -166,10 +170,15 @@ func (pl *PackageList) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type Package struct {
-	Path, Vcs, Repo string
+	Path, Vcs, Repo, Doc string
 }
 
 func NewPackage(line string) Package {
 	fields := strings.Fields(line)
-	return Package{fields[0], fields[1], fields[2]}
+	doc := ""
+	if len(fields) > 3 {
+		doc = fields[3]
+	}
+
+	return Package{fields[0], fields[1], fields[2], doc}
 }

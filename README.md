@@ -20,7 +20,7 @@ Ensure $GOPATH/bin is part of your $PATH. Install gorepos with,
 
 The package list file must contain a line for each available package in the form,
 
-	<path> <vcs> <repo-root>
+	<path> <vcs> <repo-root> [<godoc-url>]
 
 # Example
 
