@@ -20,7 +20,6 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/howeyc/fsnotify"
 	"io"
 	"net/http"
 	"os"
@@ -72,13 +71,6 @@ func NewPackageList(pkgFile string) (pl *PackageList, err error) {
 		return nil, err
 	}
 
-	go func() {
-		err := pl.watch()
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "Watching package list failed: ", err)
-		}
-	}()
-
 	return pl, nil
 }
 
@@ -110,37 +102,6 @@ func (pl *PackageList) loadPackages() error {
 		}
 	}
 	pl.packages = pkgs
-
-	return nil
-}
-
-func (pl *PackageList) watch() error {
-	for {
-		watcher, err := fsnotify.NewWatcher()
-		if err != nil {
-			return err
-		}
-
-		err = watcher.Watch(pl.file)
-		if err != nil {
-			return err
-		}
-
-		select {
-		case ev := <-watcher.Event:
-			if ev.IsModify() {
-				pl.loadPackages()
-			}
-
-		case err = <-watcher.Error:
-			return err
-		}
-
-		err = watcher.Close()
-		if err != nil {
-			return err
-		}
-	}
 
 	return nil
 }

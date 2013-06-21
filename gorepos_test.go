@@ -23,7 +23,6 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
-	"time"
 )
 
 func TestIndex(t *testing.T) {
@@ -109,32 +108,6 @@ func TestPrefix(t *testing.T) {
 	if body != expected {
 		t.Errorf("Body = %s, want %s", body, expected)
 		return
-	}
-}
-
-func TestReload(t *testing.T) {
-	list, err := generateList()
-	if err != nil {
-		t.Errorf("Error generating package list: %s", err)
-	}
-
-	pl, err := NewPackageList(list)
-	if err != nil {
-		t.Errorf("Error reading package list: %s", err)
-		return
-	}
-
-	time.Sleep(100 * time.Millisecond)
-	err = appendList(list, "/lib4 git ssh://git@go.mydomain.com/lib4")
-	if err != nil {
-		t.Errorf("Error appending item: %s", err)
-		return
-	}
-
-	time.Sleep(100 * time.Millisecond)
-	body, expected := invokePkg(pl, "lib4", "lib4", "git", "ssh://git@go.mydomain.com/lib4", true)
-	if body != expected {
-		t.Errorf("Body = %s, want %s", body, expected)
 	}
 }
 
