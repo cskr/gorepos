@@ -10,8 +10,6 @@ For example, you can use gitolite/gitorious to manage all your package repositor
 
 While `go get` has limitations in accessing private repos directly, it provides a nice discovery mechanism through `<meta>` tags which gorepos uses to provide convenient access.
 
-[![Build Status](http://goci.me/project/image/github.com/tuxychandru/gorepos)](http://goci.me/project/github.com/tuxychandru/gorepos)
-
 # Configuration
 
 Ensure $GOPATH/bin is part of your $PATH. Install gorepos with,
