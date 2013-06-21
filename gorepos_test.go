@@ -75,21 +75,40 @@ func TestPkg(t *testing.T) {
 		return
 	}
 
-	body, expected := invokePkg(pl, "lib1", "git", "ssh://git@bitbucket.org/user1/lib1", true)
+	body, expected := invokePkg(pl, "lib1", "lib1", "git", "ssh://git@bitbucket.org/user1/lib1", true)
 	if body != expected {
 		t.Errorf("Body = %s, want %s", body, expected)
 		return
 	}
 
-	body, expected = invokePkg(pl, "lib2", "hg", "ssh://hg@bitbucket.org/user2/lib2", true)
+	body, expected = invokePkg(pl, "lib2", "lib2", "hg", "ssh://hg@bitbucket.org/user2/lib2", true)
 	if body != expected {
 		t.Errorf("Body = %s, want %s", body, expected)
 		return
 	}
 
-	body, expected = invokePkg(pl, "lib3", "git", "ssh://git@go.mydomain.com/lib3", true)
+	body, expected = invokePkg(pl, "lib3", "lib3", "git", "ssh://git@go.mydomain.com/lib3", true)
 	if body != expected {
 		t.Errorf("Body = %s, want %s", body, expected)
+	}
+}
+
+func TestPrefix(t *testing.T) {
+	list, err := generateList()
+	if err != nil {
+		t.Errorf("Error generating package list: %s", err)
+	}
+
+	pl, err := NewPackageList(list)
+	if err != nil {
+		t.Errorf("Error reading package list: %s", err)
+		return
+	}
+
+	body, expected := invokePkg(pl, "lib1/subdir", "lib1", "git", "ssh://git@bitbucket.org/user1/lib1", true)
+	if body != expected {
+		t.Errorf("Body = %s, want %s", body, expected)
+		return
 	}
 }
 
@@ -113,7 +132,7 @@ func TestReload(t *testing.T) {
 	}
 
 	time.Sleep(100 * time.Millisecond)
-	body, expected := invokePkg(pl, "lib4", "git", "ssh://git@go.mydomain.com/lib4", true)
+	body, expected := invokePkg(pl, "lib4", "lib4", "git", "ssh://git@go.mydomain.com/lib4", true)
 	if body != expected {
 		t.Errorf("Body = %s, want %s", body, expected)
 	}
@@ -131,7 +150,7 @@ func TestRedirect(t *testing.T) {
 		return
 	}
 
-	body, expected := invokePkg(pl, "lib1", "git", "ssh://git@bitbucket.org/user1/lib1", false)
+	body, expected := invokePkg(pl, "lib1", "lib1", "git", "ssh://git@bitbucket.org/user1/lib1", false)
 	if body != expected {
 		t.Errorf("Body = %s, want %s", body, expected)
 		return
@@ -173,14 +192,14 @@ func appendList(list, line string) error {
 	return nil
 }
 
-func invokePkg(pl *PackageList, pkg, vcs, repo string, includeParam bool) (body, expected string) {
+func invokePkg(pl *PackageList, pkg, root, vcs, repo string, includeParam bool) (body, expected string) {
 	w := recordPkg(pl, pkg, vcs, repo, includeParam)
 
 	b := new(bytes.Buffer)
 	pkgTmpl.Execute(b, map[string]interface{}{
 		"host": "example.com",
 		"pkg": map[string]string{
-			"Path": "/" + pkg,
+			"Path": "/" + root,
 			"Vcs":  vcs,
 			"Repo": repo,
 		},

@@ -59,7 +59,7 @@ func main() {
 }
 
 type PackageList struct {
-	packages map[string]Package
+	packages map[string]*Package
 	mx       sync.RWMutex
 	file     string
 }
@@ -93,7 +93,7 @@ func (pl *PackageList) loadPackages() error {
 	defer f.Close()
 	in := bufio.NewReader(f)
 
-	pkgs := make(map[string]Package)
+	pkgs := make(map[string]*Package)
 	for {
 		ln, _, err := in.ReadLine()
 		if err == io.EOF {
@@ -154,7 +154,7 @@ func (pl *PackageList) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			"pkgs": pl.packages,
 		})
 	} else {
-		if pkg, ok := pl.packages[r.URL.Path]; ok {
+		if pkg, ok := pl.getPackage(r.URL.Path); ok {
 			if r.FormValue("go-get") == "1" || pkg.Doc == "" {
 				pkgTmpl.Execute(w, map[string]interface{}{
 					"host": r.Host,
@@ -169,16 +169,30 @@ func (pl *PackageList) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (pl *PackageList) getPackage(path string) (*Package, bool) {
+	if pkg, ok := pl.packages[path]; ok {
+		return pkg, ok
+	}
+
+	for prefix := path; prefix != ""; prefix = prefix[:strings.LastIndex(prefix, "/")] {
+		if pkg, ok := pl.packages[prefix]; ok {
+			return pkg, ok
+		}
+	}
+
+	return nil, false
+}
+
 type Package struct {
 	Path, Vcs, Repo, Doc string
 }
 
-func NewPackage(line string) Package {
+func NewPackage(line string) *Package {
 	fields := strings.Fields(line)
 	doc := ""
 	if len(fields) > 3 {
 		doc = fields[3]
 	}
 
-	return Package{fields[0], fields[1], fields[2], doc}
+	return &Package{fields[0], fields[1], fields[2], doc}
 }
