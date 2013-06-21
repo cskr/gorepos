@@ -21,6 +21,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -45,15 +46,13 @@ func main() {
 
 	pl, err := NewPackageList(*pkgFile)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Reading package list failed:", err)
-		os.Exit(2)
+		log.Fatalln("Reading package list failed:", err)
 	}
 
 	fmt.Printf("Serving package(s) on %s...\n", *addr)
 	err = http.ListenAndServe(*addr, pl)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Server failed to start:", err)
-		os.Exit(3)
+		log.Fatalln("Server failed to start:", err)
 	}
 }
 
