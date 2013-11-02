@@ -4,7 +4,6 @@ gorepos allows you to,
 * Change your code hosting location without changing imports.
 * Change VCS without changing imports.
 * Provide import paths on your domain without managing the VCS yourself.
-* Automatically re-load package list on changes.
 
 For example, you can use gitolite/gitorious to manage all your package repositories and provide authenticated access to them without losing the convenience of `go get`.
 
